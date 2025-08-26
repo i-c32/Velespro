@@ -28,6 +28,8 @@ def main():
     print(mol)
     print("Atoms:", mol.atoms)
     print("Coordinates:\n", mol.coords)
+    print("Atomic number:\n", mol.at_n)
+    print("Atomic mass:\n", mol.at_mass)
 
 
 if __name__ == "__main__":
