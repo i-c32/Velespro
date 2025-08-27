@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import logging
 
+from src.parameter.Parameters import B2A
 
 logger = logging.getLogger(__name__)
 
@@ -10,11 +11,25 @@ class Molecule:
         self.name = name
         self.atoms = []
         self.coords = np.array([])
-        self.at_n = []
-        self.at_mass = []
+        self.at_n = np.array([])
+        self.at_mass = np.array([])
+        self.molec_mass = 0
+        self.cm = np.array([])
+        self.dist_m = np.array([])
+        self.elec_rep = 0
 
     def __repr__(self):
-        return f"<Molecule {self.name} with {len(self.atoms)} atoms>"
+        """
+        :return: the cartesian coordinates of the molecule.
+        """
+        lines = []
+        # First two lines: atom count and name
+        lines.append(str(len(self.atoms)))
+        lines.append(self.name)
+        # Atom lines
+        for atom, (x, y, z) in zip(self.atoms, self.coords):
+            lines.append(f"{atom:2s}  {x:10.6f}  {y:10.6f}  {z:10.6f}")
+        return "\n".join(lines)
 
 
     def from_hocon(self, config, molecule_key: str):
@@ -26,12 +41,16 @@ class Molecule:
         raw_coords = config[molecule_key]["coord"]
         # Separate atoms and coordinates
         self.atoms = [row[0] for row in raw_coords]
-        self.coords = np.array([row[1:] for row in raw_coords], dtype=float)
+        self.coords = np.array([row[1:] for row in raw_coords], dtype=float) / B2A
 
-        # Compute atomic numbers and mass
+        # Compute molecule properties
         try:
-            self.at_n = [self.atomic_num(atom) for atom in self.atoms]
-            self.at_mass = [self.atomic_mass(at) for at in self.at_n]
+            self.at_n = np.array([self.atomic_num(atom) for atom in self.atoms])
+            self.at_mass = np.array([self.atomic_mass(at) for at in self.at_n])
+            self.molec_mass = np.sum(self.at_mass)
+            self.cm = self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
+            self.dist_m = self.distance_matrix(self.coords)
+            self.elec_rep = self.electronic_repulsion(self.at_n,self.dist_m)
         except ValueError as e:
             logging.error(f"Invalid atom: {e}")
             sys.exit(1)
@@ -68,3 +87,40 @@ class Molecule:
         ]
 
         return mass[n_at]
+
+    def center_of_mass(self, m_at, coords, t_mass):
+        """
+        Compute the center of mass of a molecule.
+
+        atoms  : list of element symbols, e.g. ["O", "H", "H"]
+        coords : list of [x, y, z] coordinates
+        """
+
+        com = (coords.T * m_at).sum(axis=1) / t_mass
+        return com
+
+    def distance_matrix(self,coords):
+        """
+        Compute pairwise distances between atoms.
+
+        coords : list or array of shape (N,3)
+        returns: array of shape (N,N)
+        """
+        diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]  # shape (N,N,3)
+        dist_matrix = np.linalg.norm(diff, axis=-1)  # Euclidean distance
+        return dist_matrix
+
+    def electronic_repulsion(self, num_at, dist_mat):
+        # Avoid division by zero on diagonal using the infinite
+        np.fill_diagonal(dist_mat, np.inf)
+
+        # Outer product of charges: Z_i * Z_j
+        charge_matrix = num_at[:, None] * num_at[None, :]
+
+        # Coulomb repulsion matrix: Z_i*Z_j / r_ij
+        rep_matrix = charge_matrix / dist_mat
+
+        # Sum only i<j (upper triangle)
+        elec_rep = np.sum(np.triu(rep_matrix, k=1))
+
+        return elec_rep

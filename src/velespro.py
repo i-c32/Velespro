@@ -25,11 +25,7 @@ def main():
 
     mol = Molecule(keys[0]).from_hocon(config, keys[0])
 
-    print(mol)
-    print("Atoms:", mol.atoms)
-    print("Coordinates:\n", mol.coords)
-    print("Atomic number:\n", mol.at_n)
-    print("Atomic mass:\n", mol.at_mass)
+    print("Atomic mass:\n", mol.elec_rep)
 
 
 if __name__ == "__main__":

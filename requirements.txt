@@ -1,2 +1,4 @@
 pyhocon
 numpy
+jupyterlab
+py3Dmol

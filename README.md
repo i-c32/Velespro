@@ -88,6 +88,13 @@ Velespro {
 python -m src.velespro <input.conf>
 ```
 
+#### Obtain the visualization of the input
+There are a jupyter notebook in utils that you can use to visualize the molecules in the input.
+
+```bash
+jupyter lab utils/molecule_drawer.ipynb
+```
+
 ## HOW TO USE OBTAIN THE COVERAGE
 
 1. Run all the test:

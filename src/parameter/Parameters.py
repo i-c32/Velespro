@@ -1,0 +1,1 @@
+B2A = 0.529177210671212 # Bohrs to Angstroms
