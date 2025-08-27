@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from scipy.spatial import distance_matrix
 import logging
 
 from src.parameter.Parameters import B2A
@@ -49,7 +50,7 @@ class Molecule:
             self.at_mass = np.array([self.atomic_mass(at) for at in self.at_n])
             self.molec_mass = np.sum(self.at_mass)
             self.cm = self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
-            self.dist_m = self.distance_matrix(self.coords)
+            self.dist_m = distance_matrix(self.coords, self.coords)
             self.elec_rep = self.electronic_repulsion(self.at_n,self.dist_m)
         except ValueError as e:
             logging.error(f"Invalid atom: {e}")
@@ -98,17 +99,6 @@ class Molecule:
 
         com = (coords.T * m_at).sum(axis=1) / t_mass
         return com
-
-    def distance_matrix(self,coords):
-        """
-        Compute pairwise distances between atoms.
-
-        coords : list or array of shape (N,3)
-        returns: array of shape (N,N)
-        """
-        diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]  # shape (N,N,3)
-        dist_matrix = np.linalg.norm(diff, axis=-1)  # Euclidean distance
-        return dist_matrix
 
     def electronic_repulsion(self, num_at, dist_mat):
         # Avoid division by zero on diagonal using the infinite
