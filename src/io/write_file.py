@@ -1,3 +1,6 @@
+from src.parameter.Parameters import umu_const, c_const
+
+
 def write_intro(name_output: str):
     """
     Write the intro file.
@@ -49,7 +52,7 @@ def write_input(name_output: str, mol):
 
 def write_prop_molec(name_output: str, mol):
     """
-    Write the input file.
+    Write the properties of the molecule.
     :param name_output: output name for the file.
     :param mol: data of the input.
     """
@@ -60,6 +63,31 @@ def write_prop_molec(name_output: str, mol):
         # First two lines: atom count and name
         lines.append("")
         lines.append(f"The center of mass is: {mol.cm}")
-        lines.append(f"The repulsion energy is: {mol.elec_rep} Hastrees")
+        lines.append("")
+        lines.append(f"The repulsion energy is: {mol.elec_rep} Hartrees")
+        lines.append("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        f.write("\n".join(lines))
+
+def write_rot_const(name_output: str, rot_const):
+    """
+    Write the rotational constants.
+    :param name_output: output name for the file.
+    :param rot_const: rotational constants.
+    """
+
+    # Ensure the config file is read correctly, handling BOM if present
+    with open(name_output, "a", encoding="utf-8") as f:
+        conv_cm = 1/umu_const*1.0E11*c_const
+        conv_ghz = 1/umu_const/100/1.0E-20
+        rot_const_cm = rot_const*conv_cm
+        rot_const_ghz = rot_const*conv_ghz
+        lines = []
+        # First two lines: atom count and name
+        lines.append("")
+        lines.append("The rotational constants in cm-1 are:")
+        lines.append(f"A = {rot_const_cm[0]}   B = {rot_const_cm[1]}   C = {rot_const_cm[2]}")
+        lines.append("")
+        lines.append("The rotational constants in GHz are:")
+        lines.append(f"A = {rot_const_ghz[0]}   B = {rot_const_ghz[1]}   C = {rot_const_ghz[2]}")
         lines.append("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         f.write("\n".join(lines))

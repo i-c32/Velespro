@@ -4,7 +4,7 @@ import logging
 
 from src.config_mod.logging_mod import setup_logging
 import src.io.read_file as rf
-from src.io.write_file import write_intro, write_input, write_prop_molec
+from src.io.write_file import write_intro, write_input, write_prop_molec, write_rot_const
 from src.molecule.molecule import Molecule
 from src.symmetry.symmetry import Symmetry
 
@@ -38,8 +38,13 @@ def main():
     write_input(name_output, mol)
     write_prop_molec(name_output, mol)
 
-    sym = Symmetry().rotation_const(mol)
-    print(sym.rot_const)
+    sym = Symmetry()
+    sym.rotation_const(mol)
+    write_rot_const(name_output,sym.rot_const)
+
+    sym.obt_sea(mol)
+    print(sym.SEA)
+
 
 if __name__ == "__main__":
     main()

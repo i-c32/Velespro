@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class Molecule:
     def __init__(self, name: str = "Unknown"):
         self.name = name
+        self.n_at = 0
         self.atoms = []
         self.coords = np.array([])
         self.at_n = np.array([])
@@ -47,6 +48,7 @@ class Molecule:
         # Compute molecule properties
         try:
             self.at_n = np.array([self.atomic_num(atom) for atom in self.atoms])
+            self.n_at = len(self.atoms)
             self.at_mass = np.array([self.atomic_mass(at) for at in self.at_n])
             self.molec_mass = np.sum(self.at_mass)
             self.cm = self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
