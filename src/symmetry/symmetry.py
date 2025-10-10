@@ -1,6 +1,5 @@
 import logging
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
 
 from src.parameter.Errors import SEA_tol
 from src.parameter.Parameters import h_const, c_const
@@ -11,8 +10,9 @@ class Symmetry:
     def __init__(self, name: str = "Unknown"):
         self.rot_const = []
         self.SEA = []
-        
-    def inet_matrix(self, mol):
+
+    @staticmethod
+    def inet_matrix(mol):
         x, y, z = mol.coords.T
 
         i_xx = np.sum(mol.at_mass * (y ** 2 + z ** 2))
@@ -39,10 +39,8 @@ class Symmetry:
         return self
 
     def obt_sea(self, mol):
-        # Se calcula la matriz de distancia para la molecula
-        m_dist = squareform(pdist(mol.coords))
         # Se ordenan las distancias de la matriz
-        m_dist_ord = np.sort(m_dist, axis=1)
+        m_dist_ord = np.sort(mol.m_dist, axis=1)
 
         usados = np.zeros(mol.n_at, dtype=bool)
 

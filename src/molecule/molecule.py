@@ -17,7 +17,7 @@ class Molecule:
         self.at_mass = np.array([])
         self.molec_mass = 0
         self.cm = np.array([])
-        self.dist_m = np.array([])
+        self.m_dist = np.array([])
         self.elec_rep = 0
 
     def __repr__(self):
@@ -51,16 +51,19 @@ class Molecule:
             self.n_at = len(self.atoms)
             self.at_mass = np.array([self.atomic_mass(at) for at in self.at_n])
             self.molec_mass = np.sum(self.at_mass)
-            self.cm = self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
-            self.dist_m = distance_matrix(self.coords, self.coords)
-            self.elec_rep = self.electronic_repulsion(self.at_n,self.dist_m)
+            cm = self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
+            # La molecula se centra en su centro de masas.
+            self.coords = self.coords - cm
+            self.m_dist = np.nan_to_num(distance_matrix(self.coords, self.coords), nan=0.0, posinf=0.0, neginf=0.0)
+            self.electronic_repulsion(self.at_n,self.m_dist)
         except ValueError as e:
             logging.error(f"Invalid atom: {e}")
             sys.exit(1)
 
         return self
 
-    def atomic_num(self, atomos):
+    @staticmethod
+    def atomic_num(atomos):
         atoms = [
             "X", "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na",
             "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn",
@@ -74,7 +77,8 @@ class Molecule:
 
         return atoms.index(atomos)
 
-    def atomic_mass(self, n_at):
+    @staticmethod
+    def atomic_mass(n_at):
         mass = [
             0.0, 1.00797, 4.0026, 6.939, 9.0122, 10.811, 12.01115, 14.0067,
             15.9994, 18.9984032, 20.183, 22.98976928, 24.312, 26.9815386, 28.0855, 30.9737620, 32.064,
@@ -91,7 +95,8 @@ class Molecule:
 
         return mass[n_at]
 
-    def center_of_mass(self, m_at, coords, t_mass):
+    @staticmethod
+    def center_of_mass(m_at, coords, t_mass):
         """
         Compute the center of mass of a molecule.
 
@@ -103,16 +108,17 @@ class Molecule:
         return com
 
     def electronic_repulsion(self, num_at, dist_mat):
-        # Avoid division by zero on diagonal using the infinite
-        np.fill_diagonal(dist_mat, np.inf)
+        # Avoid division by zero on diagonal using the infinite and copy to avoid modify the dist_mat
+        dist_m1 = dist_mat.copy()
+        np.fill_diagonal(dist_m1, np.inf)
 
         # Outer product of charges: Z_i * Z_j
         charge_matrix = num_at[:, None] * num_at[None, :]
 
         # Coulomb repulsion matrix: Z_i*Z_j / r_ij
-        rep_matrix = charge_matrix / dist_mat
+        rep_matrix = charge_matrix / dist_m1
 
         # Sum only i<j (upper triangle)
-        elec_rep = np.sum(np.triu(rep_matrix, k=1))
+        self.elec_rep = np.sum(np.triu(rep_matrix, k=1))
 
-        return elec_rep
+        return self

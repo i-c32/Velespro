@@ -59,11 +59,7 @@ def write_prop_molec(name_output: str, mol):
 
     # Ensure the config file is read correctly, handling BOM if present
     with open(name_output, "a", encoding="utf-8") as f:
-        lines = []
-        # First two lines: atom count and name
-        lines.append("")
-        lines.append(f"The center of mass is: {mol.cm}")
-        lines.append("")
+        lines = [""]
         lines.append(f"The repulsion energy is: {mol.elec_rep} Hartrees")
         lines.append("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         f.write("\n".join(lines))
