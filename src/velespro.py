@@ -42,6 +42,8 @@ def main():
     sym.rotation_const(mol)
     write_rot_const(name_output,sym.rot_const)
 
+    sym.C2_rot_med_2at(mol)
+
     sym.obt_sea(mol)
     print(sym.SEA)
 
