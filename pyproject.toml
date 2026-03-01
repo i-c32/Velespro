@@ -9,7 +9,16 @@ requires-python = ">=3.8"
 
 # Runtime dependencies
 dependencies = [
-    "pyhocon"
+    "pyhocon",
+    "numpy",
+    "scipy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyterlab",
+    "py3Dmol",
+    "ipywidgets",
 ]
 
 [build-system]
@@ -21,3 +30,50 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+# Nivel de compatibilidad de Python
+target-version = "py310"
+line-length = 111
+
+[tool.ruff.lint]
+# 1. EL COMBO ESTRICTO: Seleccionamos casi todo
+# "ALL" activa literalmente todas las reglas disponibles
+select = ["ALL"]
+
+# 2. LAS EXCEPCIONES: Cosas que suelen chocar con el formateador
+# o que son demasiado redundantes incluso para puristas.
+ignore = [
+    "D203",    # One blank line before class (conflicto con D211)
+    "D213",    # Multi-line docstring summary start (conflicto con D212)
+    "COM812",  # Trailing comma missing (conflicto con ruff format)
+    "ISC001",  # Implicit string concatenation (conflicto con ruff format)
+    "ANN101",  # Missing type annotation for 'self' (obsoleto en versiones nuevas)
+]
+
+# 3. CONFIGURACIÓN ESPECÍFICA DE PLUGINS
+[tool.ruff.lint.pydocstyle]
+convention = "google" # Puedes usar "numpy" o "pep257"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10 # No permite funciones excesivamente enredadas
+
+[tool.ruff.lint.pylint]
+max-args = 5 # No más de 5 argumentos por función
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+
+[tool.ruff.format]
+# Configuración del formateador para que sea consistente con Black
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pyright]
+include = ["src"]
+executionEnvironments = [
+  { root = "src" }
+]

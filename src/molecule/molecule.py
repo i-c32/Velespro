@@ -1,14 +1,24 @@
+"""Module to manage the properties of the molecule."""
+
+import logging
 import sys
+
 import numpy as np
 from scipy.spatial import distance_matrix
-import logging
 
 from src.parameter.Parameters import B2A
 
 logger = logging.getLogger(__name__)
 
 class Molecule:
-    def __init__(self, name: str = "Unknown"):
+    """Represent a molecular system and its physical properties."""
+
+    def __init__(self, name: str = "Unknown") -> None:
+        """Initialize a new Molecule instance.
+
+        Args:
+            name: The identifier of the molecule. Defaults to "Unknown".
+        """
         self.name = name
         self.n_at = 0
         self.atoms = []
@@ -20,9 +30,11 @@ class Molecule:
         self.m_dist = np.array([])
         self.elec_rep = 0
 
-    def __repr__(self):
-        """
-        :return: the cartesian coordinates of the molecule.
+    def __repr__(self) -> str:
+        """Return the cartesian coordinates of the molecule in XYZ format.
+
+        Returns:
+            The formatted string representation of the molecule.
         """
         lines = []
         # First two lines: atom count and name
@@ -97,13 +109,11 @@ class Molecule:
 
     @staticmethod
     def center_of_mass(m_at, coords, t_mass):
-        """
-        Compute the center of mass of a molecule.
+        """Compute the center of mass of a molecule.
 
-        atoms  : list of element symbols, e.g. ["O", "H", "H"]
-        coords : list of [x, y, z] coordinates
+        Atoms: list of element symbols, e.g. ["O", "H", "H"]
+        Coords: list of [x, y, z] coordinates
         """
-
         com = (coords.T * m_at).sum(axis=1) / t_mass
         return com
 

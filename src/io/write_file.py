@@ -1,10 +1,12 @@
+"""Module to write the molecules and the output file."""
 from src.parameter.Parameters import umu_const, c_const
 
 
 def write_intro(name_output: str):
-    """
-    Write the intro file.
-    :param name_output: output name for the file.
+    """ Write the intro file.
+
+    Args:
+        name_output: output name for the file.
     """
 
     # Ensure the config file is read correctly, handling BOM if present

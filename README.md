@@ -77,7 +77,7 @@ pip install dist/your_project-0.1.0.tar.gz
 
 ### Run process locally
 
-First you need to complete the user and password for artifactory in the config file:
+First you need a file like:
 ```
 Velespro {
 
@@ -100,3 +100,4 @@ jupyter lab utils/molecule_drawer.ipynb
 1. Run all the test:
 ```bash
 coverage run -m pytest
+```
