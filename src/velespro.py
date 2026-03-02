@@ -8,7 +8,7 @@ import logging
 import src.io.read_file as rf
 from pathlib import Path
 from config_mod import setup_logging
-from src.io.write_file import write_input, write_intro, write_prop_molec, write_rot_const
+from src.io.write_file import save_full_report
 from src.molecule.molecule import Molecule
 from src.symmetry.symmetry import Symmetry
 
@@ -32,24 +32,23 @@ def main():
     # Read the config
     config = rf.config_man(input_file)
 
-    #Obtain the name of the molecules
-    keys = list(config.keys())
+    #Obtain the molecules
+    molecules = config.get("molecule", [])
 
-    mol = Molecule(keys[0]).from_hocon(config, keys[0])
+    for mol in molecules:
+        molecs = Molecule(mol["name"]).from_config(mol)
 
-    # Write the output file
-    write_intro(output_file)
-    write_input(output_file, mol)
-    write_prop_molec(output_file, mol)
 
     sym = Symmetry()
-    sym.rotation_const(mol)
-    write_rot_const(output_file,sym.rot_const)
+    sym.rotation_const(molecs)
 
-    sym.C2_rot_med_2at(mol)
+    # Write the output file
+    save_full_report(output_file, molecs, sym)
 
-    sym.obt_sea(mol)
-    logger.debug(f"SEA: {sym.SEA})")
+    # sym.C2_rot_med_2at(molecs)
+
+    # sym.obt_sea(mol)
+    # logger.debug(f"SEA: {sym.SEA})")
 
 
 if __name__ == "__main__":

@@ -9,13 +9,13 @@ requires-python = ">=3.8"
 
 # Runtime dependencies
 dependencies = [
-    "pyhocon",
     "numpy",
     "scipy",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "debugpy",
     "jupyterlab",
     "py3Dmol",
     "ipywidgets",
@@ -33,7 +33,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 # Nivel de compatibilidad de Python
-target-version = "py310"
+target-version = "py314"
 line-length = 111
 
 [tool.ruff.lint]
@@ -51,15 +51,15 @@ ignore = [
     "ANN101",  # Missing type annotation for 'self' (obsoleto en versiones nuevas)
 ]
 
+[tool.ruff.lint.pylint]
+max-args = 5 # No más de 5 argumentos por función
+
 # 3. CONFIGURACIÓN ESPECÍFICA DE PLUGINS
 [tool.ruff.lint.pydocstyle]
 convention = "google" # Puedes usar "numpy" o "pep257"
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10 # No permite funciones excesivamente enredadas
-
-[tool.ruff.lint.pylint]
-max-args = 5 # No más de 5 argumentos por función
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

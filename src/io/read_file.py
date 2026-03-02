@@ -1,23 +1,32 @@
 """Module to read the files."""
+import tomllib
 from pathlib import Path
-from pyhocon import ConfigFactory
+from typing import TYPE_CHECKING
+
+# [TC003] Any solo se usa en la firma de la función, se mueve aquí
+if TYPE_CHECKING:
+    from typing import Any
 
 
-def config_man(input_file: Path):
+class ConfigNotFoundError(FileNotFoundError):
+    """Excepción lanzada cuando el archivo de configuración no existe."""
+
+    def __init__(self, path: Path) -> None:
+        self.message = "No se encontró el archivo en la ruta: %s", path.resolve()
+        super().__init__(self.message)
+
+def config_man(input_file: Path) -> dict[str, Any]:
     """Read the hocon file for the input.
 
     Args:
-        name_input(Path): input name for the file.
+        input_file(Path): input name for the file.
 
     Return:
         config of the job.
     """
+    if not input_file.exists():
+        raise ConfigNotFoundError(input_file)
 
-    # Ensure the config file is read correctly, handling BOM if present
-    with open(input_file, "r", encoding="utf-8") as f:
-        content = f.read()
 
-    if content.startswith("\ufeff"):
-        content = content[1:]
-
-    return ConfigFactory.parse_string(content).get("Velespro")
+    with input_file.open("rb") as f:
+        return tomllib.load(f)

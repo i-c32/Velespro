@@ -46,13 +46,13 @@ class Molecule:
         return "\n".join(lines)
 
 
-    def from_hocon(self, config, molecule_key: str):
+    def from_config(self, config):
         """
         :param config:
         :param molecule_key:
         :return:
         """
-        raw_coords = config[molecule_key]["coord"]
+        raw_coords = config["coord"]
         # Separate atoms and coordinates
         self.atoms = [row[0] for row in raw_coords]
         self.coords = np.array([row[1:] for row in raw_coords], dtype=float) / B2A

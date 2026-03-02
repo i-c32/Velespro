@@ -1,0 +1,31 @@
+[[molecule]]
+name = "water"
+coord = [
+  ["H",  0.8668118,     0.6014357,    -0.0000000],
+  ["H", -0.8668118,     0.6014357,    -0.0000000],
+  ["O",  0.0000000,    -0.0757918,     0.0000000]
+]
+method = "HF"
+basis_set = "STO-3G"
+charge = 0
+multiplicity = 1
+num_atom = 3
+
+[molecule.option]
+bohr = false
+
+[[molecule]]
+name = "water_bohr"
+coord = [
+  ["H",  1.638037,  1.136548, -0.000000],
+  ["H", -1.638037,  1.136548, -0.000000],
+  ["O",  0.000000, -0.143226,  0.000000]
+]
+method = "HF"
+basis_set = "STO-3G"
+charge = 0
+multiplicity = 1
+num_atom = 3
+
+[molecule.option]
+bohr = true
