@@ -2,6 +2,7 @@
 from src.parameter.Parameters import umu_const, c_const
 from pathlib import Path
 from typing import TextIO
+from src.molecule.molecule import Molecule
 
 
 def write_intro(f: TextIO) -> None:
@@ -14,12 +15,12 @@ def write_intro(f: TextIO) -> None:
     )
     f.write(header)
 
-def write_molecule_data(f: TextIO, mol) -> None:
+def write_molecule_data(f: TextIO, mol: Molecule) -> None:
     """Escribe las secciones de propiedades y geometría."""
     # Sección de Propiedades
     f.write("[PROPERTIES]\n")
     f.write(f"  Molecule:  {mol.name}\n")
-    f.write(f"  Atoms:     {len(mol.atoms)}\n")
+    f.write(f"  Atoms:     {mol.n_at}\n")
     f.write("  Units:     Angstrom\n\n")
 
     # Sección de Geometría
@@ -34,7 +35,7 @@ def write_molecule_data(f: TextIO, mol) -> None:
     f.write(geometry_block)
     f.write(f"  {'-'*50}\n\n")
 
-def write_prop_molec(f: TextIO, mol) -> None:
+def write_prop_molec(f: TextIO, mol: Molecule) -> None:
     """Write the properties of the molecule.
 
     :param name_output: output name for the file.
@@ -63,8 +64,8 @@ def write_rot_const(f: TextIO, rot_const) -> None:
     f.write(f"A = {rot_const_ghz[0]}   B = {rot_const_ghz[1]}   C = {rot_const_ghz[2]}\n")
     f.write(f"  {'-'*50}\n\n")
 
-def save_full_report(output_path: Path, mol, sym) -> None:
-    """Orquestador principal: gestiona la apertura del archivo."""
+def save_full_report(output_path: Path, mol: Molecule, sym) -> None:
+    """Gestiona la escritura de todo el fichero de salida."""
     try:
         with output_path.open("w", encoding="utf-8") as f:
             write_intro(f)

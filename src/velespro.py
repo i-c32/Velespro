@@ -5,10 +5,9 @@ It reads the configuration file, creates the molecule, and writes the output fil
 import argparse
 import logging
 
-import src.io.read_file as rf
 from pathlib import Path
 from config_mod import setup_logging
-from src.io.write_file import save_full_report
+from in_out import save_full_report, config_man
 from src.molecule.molecule import Molecule
 from src.symmetry.symmetry import Symmetry
 
@@ -30,10 +29,13 @@ def main():
         logger.warning("Output file not specified. Using default: %s", {output_file})
 
     # Read the config
-    config = rf.config_man(input_file)
+    config = config_man(input_file)
 
     #Obtain the molecules
     molecules = config.get("molecule", [])
+
+    # Inicializamos como None o una instancia vacía
+    molecs: Molecule | None = None
 
     for mol in molecules:
         molecs = Molecule(mol["name"]).from_config(mol)

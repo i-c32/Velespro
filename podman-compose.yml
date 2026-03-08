@@ -1,0 +1,28 @@
+---
+services:
+  dev:
+    build:
+      context: .
+    container_name: velespro_dev
+    env_file: .env
+
+    # 1. Mapeo de UID para evitar problemas de permisos en el host (Solo Podman)
+    userns_mode: "keep-id"
+
+    volumes:
+      # Sincroniza tu config de Neovim
+      - ./.config/nvim:/home/developer/.config/nvim:Z
+
+      # Persistencia de plugins y estado
+      - ./.data/arch/nvim-data:/home/developer/.local/share/nvim:Z
+      - ./.data/arch/nvim-state:/home/developer/.local/state/nvim:Z
+
+      # 3. HISTORIAL DE BASH (Para no perder tus comandos)
+      - ./.data/.bash_history:/home/developer/.bash_history:Z
+
+      # Tu código (Montamos la raíz para mantener la estructura project/src)
+      - .:/home/developer/workspace:Z
+
+    working_dir: /home/developer/workspace
+    stdin_open: true
+    tty: true

@@ -1,10 +1,10 @@
 """Module to read the files."""
 import tomllib
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 # [TC003] Any solo se usa en la firma de la función, se mueve aquí
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing import Any
 
 

@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 class Molecule:
     """Represent a molecular system and its physical properties."""
+    name: str
+    n_at: int
 
     def __init__(self, name: str = "Unknown") -> None:
         """Initialize a new Molecule instance.
