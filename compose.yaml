@@ -3,6 +3,12 @@ services:
   dev:
     build:
       context: .
+      dockerfile: Containerfile
+      args:
+        # Pasa el UID/GID del host automáticamente
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+
     container_name: velespro_dev
     env_file: .env
 
@@ -21,8 +27,11 @@ services:
       - ./.data/.bash_history:/home/developer/.bash_history:Z
 
       # Tu código (Montamos la raíz para mantener la estructura project/src)
-      - .:/home/developer/workspace:Z
+      - ./src:/home/developer/workspace/src:Z
 
     working_dir: /home/developer/workspace
     stdin_open: true
     tty: true
+
+    # Reinicia solo si crashea, no si haces Ctrl+C
+    restart: on-failure

@@ -1,4 +1,8 @@
-.data/
+# .dockerignore
+.env
 .git/
-**/__pycache__/
-node_modules/
+.data/
+.config/
+__pycache__/
+*.pyc
+.venv/

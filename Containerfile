@@ -1,26 +1,49 @@
 FROM archlinux:latest
 
-# Actualizar sistema e instalar paquetes básicos
+# ── 1. Sistema base ────────────────────────────────────────────────────────────
+# Se actualiza e instalan paquetes en una sola capa para evitar cache stale.
+# Al final se limpia la caché de pacman para reducir el tamaño de la imagen.
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
     base-devel \
     python \
     python-pip \
+    python-virtualenv \
     neovim \
     git \
     nodejs \
-    # Limpieza crucial: pacman guarda todos los .tar descargados
-    pacman -Scc --noconfirm
+    npm && \
+    pacman -Scc --noconfirm && \
+    rm -rf /var/cache/pacman/pkg/*
 
-# Crear un usuario para no trabajar como root
+# ── 2. Usuario no-root ─────────────────────────────────────────────────────────
 ARG USERNAME=developer
-RUN useradd -m -s /bin/bash $USERNAME && \
-    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
+ARG UID=1000
+ARG GID=1000
 
-# 3. Variables de entorno de Python y Herramientas
-# Arch bloquea instalaciones de pip globales por defecto ahora (PEP 668)
-ENV PIP_BREAK_SYSTEM_PACKAGES=1
-ENV EDITOR=nvim
+RUN groupadd --gid $GID $USERNAME && \
+    useradd --uid $UID --gid $GID -m -s /bin/bash $USERNAME && \
+    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME
+
+# ── 3. Variables de entorno ────────────────────────────────────────────────────
+ENV EDITOR=nvim \
+    VIRTUAL_ENV=/home/$USERNAME/.venv \
+    PATH="/home/$USERNAME/.venv/bin:$PATH"
+
+# ── 4. Entorno virtual + dependencias del pyproject.toml ──────────────────────
+# Copiamos primero solo el pyproject.toml para aprovechar el cache de capas:
+# si el código cambia pero las deps no, esta capa no se reconstruye.
+COPY --chown=$USERNAME:$USERNAME pyproject.toml /home/$USERNAME/workspace/
 
 USER $USERNAME
 WORKDIR /home/$USERNAME/workspace
+
+RUN python -m venv $VIRTUAL_ENV && \
+    pip install --upgrade pip && \
+    pip install ".[dev]"
+
+# ── 5. Código fuente (capa separada para cache eficiente) ──────────────────────
+#COPY --chown=$USERNAME:$USERNAME . /home/$USERNAME/workspace/
+
+CMD ["/bin/bash"]
