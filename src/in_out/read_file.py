@@ -12,17 +12,23 @@ class ConfigNotFoundError(FileNotFoundError):
     """Excepción lanzada cuando el archivo de configuración no existe."""
 
     def __init__(self, path: Path) -> None:
-        self.message = "No se encontró el archivo en la ruta: %s", path.resolve()
-        super().__init__(self.message)
+        """Se Compruba la existencia del fichero."""
+        self.path = path
+        message = f"No se encontró el archivo en la ruta: {path.resolve()}"
+        super().__init__(message)
 
-def config_man(input_file: Path) -> dict[str, Any]:
-    """Read the hocon file for the input.
+def load_config(input_file: Path) -> dict[str, Any]:
+    """Read a TOML configuration file.
 
     Args:
-        input_file(Path): input name for the file.
+        input_file: Path to the TOML configuration file.
 
-    Return:
-        config of the job.
+    Returns:
+        Dictionary with the parsed configuration.
+
+    Raises:
+        ConfigNotFoundError: If the file does not exist.
+        tomllib.TOMLDecodeError: If the file is not valid TOML.
     """
     if not input_file.exists():
         raise ConfigNotFoundError(input_file)

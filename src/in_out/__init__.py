@@ -6,7 +6,7 @@ It ensures consistent and efficient handling of all file interactions
 within the quantum chemistry simulation workflow.
 """
 
-from .read_file import config_man
+from .read_file import load_config
 from .write_file import save_full_report
 
-__all__ = ["config_man", "save_full_report"]
+__all__ = ["load_config", "save_full_report"]

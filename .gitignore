@@ -182,3 +182,4 @@ __marimo__/
 
 # data
 .data/
+.data/.bash_history

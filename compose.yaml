@@ -19,10 +19,10 @@ services:
     userns_mode: "keep-id"
 
     volumes:
-      # Sincroniza tu config de Neovim
-      - ~/.config/nvim:/home/developer/.config/nvim:Z
+      # Sincroniza la config de Neovim local
+      - ./.config/nvim:/home/developer/.config/nvim:Z,ro
       # Sincroniza tu .bashrc
-      - ./.config/bash/bashrc:/home/developer/.bashrc:Z
+      - ./.config/bash/bashrc:/home/developer/.bashrc:Z,ro
 
       # Persistencia de plugins y estado
       - ./.data/arch/nvim-data:/home/developer/.local/share/nvim:Z
@@ -35,6 +35,7 @@ services:
       - ./src:/home/developer/workspace/src:Z
       - ./tests:/home/developer/workspace/tests:Z
       - ./resources:/home/developer/workspace/resources:Z
+      - ./.git:/home/developer/workspace/.git:Z
 
     working_dir: /home/developer/workspace
     stdin_open: true
