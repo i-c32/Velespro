@@ -34,14 +34,15 @@ ENV EDITOR=nvim \
 # ── 4. Entorno virtual + dependencias del pyproject.toml ──────────────────────
 # Copiamos primero solo el pyproject.toml para aprovechar el cache de capas:
 # si el código cambia pero las deps no, esta capa no se reconstruye.
-COPY --chown=$USERNAME:$USERNAME pyproject.toml /home/$USERNAME/workspace/
-
 USER $USERNAME
 WORKDIR /home/$USERNAME/workspace
 
+COPY --chown=$USERNAME:$USERNAME pyproject.toml README.md ./
+RUN mkdir -p src
+
 RUN python -m venv $VIRTUAL_ENV && \
     pip install --upgrade pip && \
-    pip install ".[dev]"
+    pip install -e ".[dev]"
 
 # ── 5. Código fuente (capa separada para cache eficiente) ──────────────────────
 #COPY --chown=$USERNAME:$USERNAME . /home/$USERNAME/workspace/

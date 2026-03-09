@@ -10,14 +10,19 @@ services:
         GID: "${GID:-1000}"
 
     container_name: velespro_dev
+    hostname: arch-veles
     env_file: .env
-
+    environment:
+      - PYTHONPATH=/home/developer/workspace
+      - MOD_PROMPT=\001\033[1;36m\002(Velespro)\001\033[0m\002
     # 1. Mapeo de UID para evitar problemas de permisos en el host (Solo Podman)
     userns_mode: "keep-id"
 
     volumes:
       # Sincroniza tu config de Neovim
-      - ./.config/nvim:/home/developer/.config/nvim:Z
+      - ~/.config/nvim:/home/developer/.config/nvim:Z
+      # Sincroniza tu .bashrc
+      - ./.config/bash/bashrc:/home/developer/.bashrc:Z
 
       # Persistencia de plugins y estado
       - ./.data/arch/nvim-data:/home/developer/.local/share/nvim:Z
@@ -28,6 +33,8 @@ services:
 
       # Tu código (Montamos la raíz para mantener la estructura project/src)
       - ./src:/home/developer/workspace/src:Z
+      - ./tests:/home/developer/workspace/tests:Z
+      - ./resources:/home/developer/workspace/resources:Z
 
     working_dir: /home/developer/workspace
     stdin_open: true

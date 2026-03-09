@@ -13,6 +13,9 @@ dependencies = [
     "scipy",
 ]
 
+[project.urls]
+Repository = "https://github.com/i-c32/Velespro"
+
 [project.optional-dependencies]
 dev = [
     "debugpy",
@@ -75,7 +78,7 @@ line-ending = "auto"
 [tool.basedpyright]
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["."]
+extraPaths = ["src"]
 
 # Opciones de entorno
 useLibraryCodeForTypes = true
@@ -85,7 +88,4 @@ strictSetInference = true
 analyzeUnannotatedFunctions = true
 strictParameterNoneValue = true
 enableTypeIgnoreComments = true
-
-venvPath = "."
-venv = ".venv"
 
