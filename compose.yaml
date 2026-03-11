@@ -24,7 +24,7 @@ services:
       - PYTHONPATH=/home/developer/workspace
       - MOD_PROMPT=\001\033[1;36m\002(Velespro-dev)\001\033[0m\002
     # 1. Mapeo de UID para evitar problemas de permisos en el host (Solo Podman)
-    user: "${UID:-1000}:${GID:-1000}"
+    userns_mode: keep-id
 
     volumes:
       # Sincroniza la config de Neovim local
@@ -75,7 +75,7 @@ services:
     environment:
       - PYTHONPATH=/home/developer/workspace
 
-    user: "${UID:-1000}:${GID:-1000}"
+    userns_mode: keep-id
 
     working_dir: /home/developer/workspace
 
