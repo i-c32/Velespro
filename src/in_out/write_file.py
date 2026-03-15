@@ -73,10 +73,6 @@ def save_full_report(output_path: Path, mol: Molecule, sym) -> None:
             write_prop_molec(f, mol)
             write_rot_const(f,sym.rot_const)
 
-            # Modeline para Neovim al final del archivo
-            f.write(f"\n{'='*70}\n")
-            f.write("# vim: set foldmethod=expr foldexpr=getline(v\\:lnum)=~'^\\['?'>1'\\:'=' :\n")
-
     except OSError as e:
         logger.error("Error al escribir el reporte en %s: %s", output_path, e)
 

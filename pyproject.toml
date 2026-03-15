@@ -19,6 +19,7 @@ Repository = "https://github.com/i-c32/Velespro"
 [project.optional-dependencies]
 dev = [
     "debugpy",
+    "scipy-stubs",
     "jupyterlab",
     "py3Dmol",
     "ipywidgets",

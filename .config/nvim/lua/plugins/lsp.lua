@@ -9,7 +9,7 @@ return {
       -- 1. Inicializar Mason
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "taplo", "jsonls", "yamlls", "basedpyright", "ruff"},
+        ensure_installed = { },
       })
 
       -- 2. Configuración de Diagnósticos (Para ver quién es quién)

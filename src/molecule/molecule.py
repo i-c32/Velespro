@@ -4,11 +4,11 @@ import logging
 import sys
 
 import numpy as np
+from typing import Any
 from scipy.spatial import distance_matrix
 
-from src.parameter.Parameters import B2A
-
 logger = logging.getLogger(__name__)
+
 
 class Molecule:
     """Represent a molecular system and its physical properties."""
@@ -48,28 +48,26 @@ class Molecule:
         return "\n".join(lines)
 
 
-    def from_config(self, config):
-        """
-        :param config:
-        :param molecule_key:
-        :return:
-        """
-        raw_coords = config["coord"]
+    def from_config(self, config: dict[str, Any]) -> Molecule:
+        """Build molecule from config dict with coordinate and atom data."""
+        raw_coords: list[list[Any]] = config["coord"]
+        atoms_raw, *xyz = zip(*raw_coords, strict=True)
         # Separate atoms and coordinates
-        self.atoms = [row[0] for row in raw_coords]
-        self.coords = np.array([row[1:] for row in raw_coords], dtype=float) / B2A
+        self.atoms = list(atoms_raw)
+        self.coords = np.array(xyz, dtype=float).T
 
         # Compute molecule properties
         try:
             self.at_n = np.array([self.atomic_num(atom) for atom in self.atoms])
             self.n_at = len(self.atoms)
             self.at_mass = np.array([self.atomic_mass(at) for at in self.at_n])
-            self.molec_mass = np.sum(self.at_mass)
-            cm = self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
+            self.molec_mass = self.at_mass.sum()
             # La molecula se centra en su centro de masas.
-            self.coords = self.coords - cm
-            self.m_dist = np.nan_to_num(distance_matrix(self.coords, self.coords), nan=0.0, posinf=0.0, neginf=0.0)
+            self.coords -= self.center_of_mass(self.at_mass, self.coords, self.molec_mass)
+            self.m_dist = distance_matrix(self.coords, self.coords)
+
             self.electronic_repulsion(self.at_n,self.m_dist)
+
         except ValueError as e:
             logging.error(f"Invalid atom: {e}")
             sys.exit(1)
@@ -77,7 +75,15 @@ class Molecule:
         return self
 
     @staticmethod
-    def atomic_num(atomos):
+    def atomic_num(atomos: str) -> int:
+        """Obtain the atomic number for the name of the atom.
+
+        Args:
+            atomos: Name of the atom.
+
+        Returns:
+            Number of the atomic number
+        """
         atoms = [
             "X", "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na",
             "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn",
@@ -92,7 +98,15 @@ class Molecule:
         return atoms.index(atomos)
 
     @staticmethod
-    def atomic_mass(n_at):
+    def atomic_mass(n_at: int) -> float:
+        """Obtain the atomic mass for the name of the atom.
+
+        Args:
+            n_at: Name of the atom.
+
+        Returns:
+            Mass of the atom
+        """
         mass = [
             0.0, 1.00797, 4.0026, 6.939, 9.0122, 10.811, 12.01115, 14.0067,
             15.9994, 18.9984032, 20.183, 22.98976928, 24.312, 26.9815386, 28.0855, 30.9737620, 32.064,
@@ -110,27 +124,30 @@ class Molecule:
         return mass[n_at]
 
     @staticmethod
-    def center_of_mass(m_at, coords, t_mass):
+    def center_of_mass(m_at: np.ndarray, coords: np.ndarray, t_mass: float) -> np.ndarray:
         """Compute the center of mass of a molecule.
 
-        Atoms: list of element symbols, e.g. ["O", "H", "H"]
-        Coords: list of [x, y, z] coordinates
+        Args:
+            m_at: Numpy array with the mass of each atom.
+            coords: Array with the coords of the molecule
+            t_mass: Mass of the molecule
+
+        Returns:
+            The cartesian coordiantes for the center of mass
         """
-        com = (coords.T * m_at).sum(axis=1) / t_mass
-        return com
+        return (coords.T * m_at).sum(axis=1) / t_mass
 
-    def electronic_repulsion(self, num_at, dist_mat):
-        # Avoid division by zero on diagonal using the infinite and copy to avoid modify the dist_mat
-        dist_m1 = dist_mat.copy()
-        np.fill_diagonal(dist_m1, np.inf)
+    def electronic_repulsion(self, num_at: np.ndarray, dist_mat: np.ndarray) -> Molecule:
+        """Obtain the electronic repulsion.
 
-        # Outer product of charges: Z_i * Z_j
-        charge_matrix = num_at[:, None] * num_at[None, :]
+        Args:
+            num_at: Array con los numeros atomicos.
+            dist_mat: Matriz con las distancias entre las moleculas.
 
-        # Coulomb repulsion matrix: Z_i*Z_j / r_ij
-        rep_matrix = charge_matrix / dist_m1
-
-        # Sum only i<j (upper triangle)
-        self.elec_rep = np.sum(np.triu(rep_matrix, k=1))
+        Returns:
+            Energia de repulsion electronica
+        """
+        i, j = np.triu_indices(len(num_at), k=1)
+        self.elec_rep = np.sum((num_at[i] * num_at[j]) / dist_mat[i, j])
 
         return self

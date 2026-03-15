@@ -12,7 +12,6 @@ ARG GID=1000
 # Sistema base: solo Python y lo estrictamente necesario para compilar wheels
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
-        base-devel \
         python \
         python-pip && \
     pacman -Scc --noconfirm && \
@@ -21,10 +20,6 @@ RUN pacman -Syu --noconfirm && \
 # Usuario no-root con UID/GID del host para evitar problemas de permisos
 RUN groupadd --gid "$GID" "$USERNAME" && \
     useradd  --uid "$UID" --gid "$GID" -m -s /bin/bash "$USERNAME"
-
-# Variables de entorno comunes a ambos stages hijos
-# el entorno vitual se encuentra en /opt/venv
-RUN mkdir -p /opt/venv && chown "$UID:$GID" /opt/venv
 
 ENV VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
@@ -40,23 +35,51 @@ FROM base AS development
 RUN pacman -S --noconfirm \
         python-virtualenv \
         neovim \
+        man-db \
         git \
         nodejs \
-        npm && \
+        scdoc \
+        taplo-cli \
+        yaml-language-server \
+        vscode-json-languageserver \
+        ruff && \
     pacman -Scc --noconfirm && \
     rm -rf /var/cache/pacman/pkg/*
 
-ENV EDITOR=nvim
+ENV VIRTUAL_ENV_LSP=/opt/venv_lsp \
+    PATH="/opt/venv/bin:/opt/venv_lsp/bin:$PATH" \
+    EDITOR=nvim
 
-USER $USERNAME
+# Compilar el .scd y dejarlo en la estructura correcta
+COPY --chown=root:root .config/man/nvim_cheat.1.scd /tmp/nvim_cheat.scd
+RUN mkdir -p /usr/local/share/man/man1 && \
+    scdoc < /tmp/nvim_cheat.scd > /usr/local/share/man/man1/nvim_cheat.1 && \
+    rm /tmp/nvim_cheat.scd && \
+    mandb --quiet
+
+# [FIX] Crear ambos venvs y fijar permisos ANTES de cambiar de usuario,
+# así los RUN posteriores (como pip install) pueden correr como $USERNAME.
+RUN python -m venv "$VIRTUAL_ENV"  && chown -R "$UID:$GID" "$VIRTUAL_ENV" && \
+    python -m venv "$VIRTUAL_ENV_LSP" && chown -R "$UID:$GID" "$VIRTUAL_ENV_LSP"
+
+# WORKDIR definido antes del primer COPY
 WORKDIR /home/$USERNAME/workspace
+
+# Todos los pasos siguientes corren como el usuario no-root
+USER $USERNAME
 
 # 1. Instalar dependencias (incluye grupo [dev]: pytest, linters, type-checkers…)
 COPY --chown=$USERNAME:$USERNAME pyproject.toml README.md ./
 RUN mkdir -p src && \
-    python -m venv "$VIRTUAL_ENV" && \
-    pip install --upgrade pip --quiet && \
-    pip install -e ".[dev]" --quiet   # editable + extras de desarrollo
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -e ".[dev]"   # editable + extras de desarrollo
+
+# Creamos un entorno virtual para los lsp
+# Dependencias LSP en su propio venv aislado
+RUN /opt/venv_lsp/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/venv_lsp/bin/pip install --no-cache-dir \
+        basedpyright \
+        yamllint
 
 # El código se monta en tiempo de ejecución vía compose → no se copia aquí
 CMD ["/bin/bash"]
@@ -68,15 +91,17 @@ CMD ["/bin/bash"]
 # ══════════════════════════════════════════════════════════════════════════════
 FROM base AS production
 
-USER $USERNAME
+RUN python -m venv "$VIRTUAL_ENV" && chown -R "$UID:$GID" "$VIRTUAL_ENV"
+
 WORKDIR /home/$USERNAME/workspace
+USER $USERNAME
 
 # 1. Instalar dependencias (capa cacheada independiente del código)
 COPY --chown=$USERNAME:$USERNAME pyproject.toml README.md ./
+
 RUN mkdir -p src && \
-    python -m venv "$VIRTUAL_ENV" && \
-    pip install --upgrade pip --quiet && \
-    pip install . --quiet          # solo dependencias de producción (sin [dev])
+    pip install --no-cache-dir --upgrade pip  && \
+    pip install --no-cache-dir .           # solo dependencias de producción (sin [dev])
 
 # 2. Copiar el código fuente (capa separada para cache eficiente)
 COPY --chown=$USERNAME:$USERNAME src/       ./src/
