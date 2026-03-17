@@ -18,7 +18,7 @@ services:
 
     image: velespro:dev
     container_name: velespro_dev
-    hostname: arch-veles
+    hostname: fedora-veles
     env_file: .env
     environment:
       - PYTHONPATH=/home/developer/workspace
@@ -33,8 +33,8 @@ services:
       - ./.config/bash/bashrc:/home/developer/.bashrc:Z,ro
 
       # Persistencia de plugins y estado
-      - ./.data/arch/nvim-data:/home/developer/.local/share/nvim:Z,U
-      - ./.data/arch/nvim-state:/home/developer/.local/state/nvim:Z,U
+      - ./.data/fedora/nvim-data:/home/developer/.local/share/nvim:Z,U
+      - ./.data/fedora/nvim-state:/home/developer/.local/state/nvim:Z,U
 
       # 3. HISTORIAL DE BASH (Para no perder tus comandos)
       - ./.data/.bash_history:/home/developer/.bash_history:Z
@@ -69,7 +69,7 @@ services:
 
     image: velespro:prod
     container_name: velespro_prod
-    hostname: arch-veles-prod
+    hostname: fedora-veles-prod
 
     env_file: .env
     environment:

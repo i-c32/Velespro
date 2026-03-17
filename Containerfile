@@ -3,19 +3,19 @@
 # Imagen mínima compartida: sistema + usuario no-root + Python limpio.
 # Ni herramientas de desarrollo ni dependencias de la app.
 # ══════════════════════════════════════════════════════════════════════════════
-FROM archlinux:latest AS base
+FROM fedora:latest AS base
 
 ARG USERNAME=developer
 ARG UID=1000
 ARG GID=1000
 
 # Sistema base: solo Python y lo estrictamente necesario para compilar wheels
-RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm \
-        python \
-        python-pip && \
-    pacman -Scc --noconfirm && \
-    rm -rf /var/cache/pacman/pkg/*
+RUN dnf upgrade -y && \
+    dnf install -y \
+        python3 \
+        python3-pip && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf*
 
 # Usuario no-root con UID/GID del host para evitar problemas de permisos
 RUN groupadd --gid "$GID" "$USERNAME" && \
@@ -32,23 +32,17 @@ ENV VIRTUAL_ENV=/opt/venv \
 FROM base AS development
 
 # Herramientas exclusivas del entorno de desarrollo
-RUN pacman -S --noconfirm \
-        python-virtualenv \
+RUN dnf install -y \
         neovim \
         man-db \
         git \
         nodejs \
         scdoc \
-        taplo-cli \
-        yaml-language-server \
-        vscode-json-languageserver \
-        ruff && \
-    pacman -Scc --noconfirm && \
-    rm -rf /var/cache/pacman/pkg/*
+        npm && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf*
 
-ENV VIRTUAL_ENV_LSP=/opt/venv_lsp \
-    PATH="/opt/venv/bin:/opt/venv_lsp/bin:$PATH" \
-    EDITOR=nvim
+ENV EDITOR=nvim
 
 # Compilar el .scd y dejarlo en la estructura correcta
 COPY --chown=root:root .config/man/nvim_cheat.1.scd /tmp/nvim_cheat.scd
@@ -57,10 +51,9 @@ RUN mkdir -p /usr/local/share/man/man1 && \
     rm /tmp/nvim_cheat.scd && \
     mandb --quiet
 
-# [FIX] Crear ambos venvs y fijar permisos ANTES de cambiar de usuario,
+# [FIX] Crear el venvs y fijar permisos ANTES de cambiar de usuario,
 # así los RUN posteriores (como pip install) pueden correr como $USERNAME.
-RUN python -m venv "$VIRTUAL_ENV"  && chown -R "$UID:$GID" "$VIRTUAL_ENV" && \
-    python -m venv "$VIRTUAL_ENV_LSP" && chown -R "$UID:$GID" "$VIRTUAL_ENV_LSP"
+RUN python3 -m venv "$VIRTUAL_ENV"  && chown -R "$UID:$GID" "$VIRTUAL_ENV"
 
 # WORKDIR definido antes del primer COPY
 WORKDIR /home/$USERNAME/workspace
@@ -72,14 +65,8 @@ USER $USERNAME
 COPY --chown=$USERNAME:$USERNAME pyproject.toml README.md ./
 RUN mkdir -p src && \
     pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e ".[dev]"   # editable + extras de desarrollo
-
-# Creamos un entorno virtual para los lsp
-# Dependencias LSP en su propio venv aislado
-RUN /opt/venv_lsp/bin/pip install --no-cache-dir --upgrade pip && \
-    /opt/venv_lsp/bin/pip install --no-cache-dir \
-        basedpyright \
-        yamllint
+    pip install --no-cache-dir -e ".[dev]" && \
+    pip install --no-cache-dir yamllint
 
 # El código se monta en tiempo de ejecución vía compose → no se copia aquí
 CMD ["/bin/bash"]
@@ -89,7 +76,25 @@ CMD ["/bin/bash"]
 # Imagen final ligera: solo dependencias de runtime + código fuente copiado.
 # Sin Neovim, sin git, sin npm, sin paquetes [dev].
 # ══════════════════════════════════════════════════════════════════════════════
-FROM base AS production
+FROM python:3.14-slim AS production
+
+ARG USERNAME=developer
+ARG UID=1000
+ARG GID=1000
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libgomp1 \
+        libgfortran5 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid "$GID" "$USERNAME" && \
+    useradd  --uid "$UID" --gid "$GID" -m -s /bin/bash "$USERNAME"
+
+ENV VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH="/home/developer/workspace/src"
 
 RUN python -m venv "$VIRTUAL_ENV" && chown -R "$UID:$GID" "$VIRTUAL_ENV"
 
@@ -108,5 +113,5 @@ COPY --chown=$USERNAME:$USERNAME src/       ./src/
 COPY --chown=$USERNAME:$USERNAME resources/ ./resources/
 
 # Ajusta este CMD al entry-point real de tu aplicación
-ENTRYPOINT ["python", "-m", "src"]
+ENTRYPOINT ["python", "-m", "src.velespro"]
 CMD ["--help"]
