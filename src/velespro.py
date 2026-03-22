@@ -36,26 +36,6 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
-def build_molecules(config: dict) -> list[Molecule]:
-    """Instantiate Molecule objects from the parsed configuration.
-
-    Args:
-        config: Parsed TOML configuration dictionary.
-
-    Returns:
-        List of Molecule instances.
-
-    Raises:
-        ValueError: If no molecules are defined in the configuration.
-    """
-    raw_molecules = config.get("molecule", [])
-    if not raw_molecules:
-        raise ValueError("No molecules found in the configuration file.")
-
-    return [Molecule(mol["name"]).from_config(mol) for mol in raw_molecules]
-
-
 def run(input_file: Path, output_file: Path) -> int:
     """Execute the full computational chemistry pipeline.
 
@@ -67,8 +47,8 @@ def run(input_file: Path, output_file: Path) -> int:
         Exit code: 0 on success, 1 on handled error, 2 on unexpected error.
     """
     try:
-        config = load_config(input_file)
-        molecules = build_molecules(config)
+        mol_config = load_config(input_file)
+        #molecules = build_molecules(config)
     except FileNotFoundError as e:
         logger.error("Input file not found: %s", e)
         return 1
@@ -82,9 +62,9 @@ def run(input_file: Path, output_file: Path) -> int:
     # For the Symmetry
     try:
         sym = Symmetry()
-        for mol in molecules:
-            logger.info("Processing molecule: %s", mol.name)
-            sym.rotation_const(mol)
+#        for mol in molecules:
+#            logger.info("Processing molecule: %s", mol.name)
+#            sym.rotation_const(mol)
 
             # sym.C2_rot_med_2at(molecs)
 
@@ -95,12 +75,12 @@ def run(input_file: Path, output_file: Path) -> int:
         return 2
 
     # Final report
-    try:
-        molec = molecules[0]
-        save_full_report(output_file, molec, sym)
-    except Exception as e:
-        logger.critical("Pipeline failed during processing: %s", e, exc_info=True)
-        return 2
+#    try:
+#        molec = molecules[0]
+#        save_full_report(output_file, molec, sym)
+#    except Exception as e:
+#        logger.critical("Pipeline failed during processing: %s", e, exc_info=True)
+#        return 2
 
     logger.info("Report successfully written to: %s", output_file)
     return 0
